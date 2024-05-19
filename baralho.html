@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang='pt-br'>
+
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1,shrink-to-fit=no'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Baralho - ?</title>
+
+    <style>
+        :root {
+            --primary-color: #f90a39;
+            --game-color: #0c4719;
+            --text-color: #1d1d1d;
+            --bg-color: #f1f1fb;
+            --fa-style-family-brands: "Font Awesome 6 Brands";
+            --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background: #ffffff;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar {
+            width: 100%;
+            max-width: 600px;
+            background: var(--bg-color);
+            padding: 30px 20px;
+            border-radius: 10px;
+        }
+
+        .calendar .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .calendar .header .month {
+            display: flex;
+            align-items: center;
+            font-size: 25px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .calendar .header .btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar .header .btns .btn {
+            width: 50px;
+            height: 40px;
+            background: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar .header .btns .btn:hover {
+            background: #db0933;
+            transform: scale(1.05);
+        }
+
+        .calendar .weekdays {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .calendar .weekdays .day {
+            width: calc(100% / 7 - 10px);
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .calendar .days {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .calendar .days .day {
+            width: calc(100% / 7 - 10px);
+            height: 50px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-color);
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .calendar .days .day:not(.next):not(.prev):hover {
+            color: #fff;
+            background: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .calendar .days .day.next,
+        .calendar .days .day.prev {
+            color: #ccc;
+        }
+
+        .calendar .days .day.today {
+            color: #fff;
+            background: var(--primary-color);
+        }
+
+        .calendar .days .day.hasgame {
+            color: #fff;
+            background: var(--game-color);
+        }
+
+        .gbutton {
+            background-color: #125e42a2;
+            border: none;
+            color: white;
+            padding: 5px 5px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 2px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        .gbutton:hover {
+            background-color: rgb(25, 55, 121);
+            color: white;
+        }
+    </style>
+</head>
+
+<body onload='init()'>
+    <div class="container" id="gamesDIV">
+        <div class="calendar">
+            <div class="header">
+                <div class="month" id="games">Jogos Marcados</div>
+            </div>
+            <div id="gameList">
+                <b>Carregando...</b>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="gameDIV">
+        <div class="calendar">
+            <div class="header">
+                <div class="month" id="dtGame">Jogo</div>
+                <div class="btns">
+                    <div class="btns">
+                        <div class="btn prev" title="Voltar" onclick='show("gamesDIV");'>
+                            <i class="fa fa-chevron-left"></i>
+                        </div>
+                        <div class="btn check" title="Confirmar/Desmarcar" onclick='checkGame();'>
+                            <i class="fa fa-check-square-o" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="gameDetail">
+
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js'
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js'
+        import { getDatabase, ref, onValue, child, push, update } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js'
+
+        const firebaseConfig = {
+            apiKey: "e6f98bd362aa23489c8850741cf08e9f1e641176",
+            authDomain: "Baralho-Jogos",
+            projectId: "baralho-5ad64",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRefGames = ref(db, 'jogos');
+
+        onValue(dbRefGames, (snapshot) => {
+            snapshot.forEach((childSnapshot) => {
+                const childData = childSnapshot.val();
+                var game = {};
+                game.key = childSnapshot.key;
+                game.gdata = childData.gdata;
+                game.msg = childData.msg;
+                game.membro_1 = childData.membro_1;
+                game.membro_2 = childData.membro_2;
+                game.membro_3 = childData.membro_3;
+                game.membro_4 = childData.membro_4;
+                game.membro_5 = childData.membro_5;
+                game.membro_6 = childData.membro_6;
+                game.membro_7 = childData.membro_7;
+                game.membro_8 = childData.membro_8;
+                gameData.push(game);
+            });
+        }, {
+            onlyOnce: true
+        });
+
+        const dbRefMembers = ref(db, 'membros');
+        onValue(dbRefMembers, (snapshot) => {
+            snapshot.forEach((childSnapshot) => {
+                const childData = childSnapshot.val();
+                var key = childSnapshot.key;
+                memberData.push(childData);
+            });
+        }, {
+            onlyOnce: true
+        });
+
+        export const saveData = () => {
+            const updates = {};
+            let x = [
+                gameData[curGameDataKey].membro_1,
+                gameData[curGameDataKey].membro_2,
+                gameData[curGameDataKey].membro_3,
+                gameData[curGameDataKey].membro_4,
+                gameData[curGameDataKey].membro_5,
+                gameData[curGameDataKey].membro_6,
+                gameData[curGameDataKey].membro_7,
+                gameData[curGameDataKey].membro_8,
+            ];
+
+            switch (memberKey) {
+                case 0:
+                    (gameData[curGameDataKey].membro_1 === "1") ? x[0] = "0" : x[0] = "1";
+                    break;
+                case 1:
+                    (gameData[curGameDataKey].membro_2 === "1") ? x[1] = "0" : x[1] = "1";
+                    break;
+                case 2:
+                    (gameData[curGameDataKey].membro_3 === "1") ? x[2] = "0" : x[2] = "1";
+                    break;
+                case 3:
+                    (gameData[curGameDataKey].membro_4 === "1") ? x[3] = "0" : x[3] = "1";
+                    break;
+                case 4:
+                    (gameData[curGameDataKey].membro_5 === "1") ? x[4] = "0" : x[4] = "1";
+                    break;
+                case 5:
+                    (gameData[curGameDataKey].membro_6 === "1") ? x[5] = "0" : x[5] = "1";
+                    break;
+                case 6:
+                    (gameData[curGameDataKey].membro_7 === "1") ? x[6] = "0" : x[6] = "1";
+                    break;
+                case 7:
+                    (gameData[curGameDataKey].membro_8 === "1") ? x[7] = "0" : x[7] = "1";
+                    break;
+            }
+
+            const postData = {
+                gdata: gameData[curGameDataKey].gdata,
+                msg: gameData[curGameDataKey].msg,
+                membro_1: x[0],
+                membro_2: x[1],
+                membro_3: x[2],
+                membro_4: x[3],
+                membro_5: x[4],
+                membro_6: x[5],
+                membro_7: x[6],
+                membro_8: x[7]
+            };
+
+            updates['/jogos/' + '/' + curGameKey] = postData;
+            update(ref(db), updates);
+        };
+        window.saveData = saveData;                  
+    </script>
+    <script>
+        let curDate = '';
+        let selDay = "";
+        let curGameKey = '';
+        let curGameDataKey = 0;
+        const gameData = [];
+        const memberData = [];
+        const memberKey = 0;
+
+        let x = document.getElementById("gamesDIV");
+        x.style.display = "";
+        x = document.getElementById("gameDIV");
+        x.style.display = "none";
+
+        function delay(time) {
+            return new Promise(resolve => setTimeout(resolve, time));
+        }
+
+        async function init() {
+            await delay(1000);
+            let text = "";
+            for (const [key, value] of Object.entries(gameData)) {
+                text += '<p><button type="button" class="gbutton" onclick="showGame(' + key + ');">' + gameData[key].gdata + '</button>' + '  ' + gameData[key].msg + ' </p></br>'
+            }
+            document.getElementById("gameList").innerHTML = text;
+            document.title = "Baralho - " + memberData[memberKey];
+        }
+
+        function show(targetDiv) {
+            x = document.getElementById("gameDIV");
+            x.style.display = "none";
+            x = document.getElementById("gamesDIV");
+            x.style.display = "none";
+            x = document.getElementById(targetDiv);
+            x.style.display = "";
+        }
+
+        function checkGame() {
+            saveData();
+            location.reload();
+        }
+
+        function showGame(key) {
+            curGameKey = gameData[key].key;
+            curGameDataKey = key;
+            let text = "";
+
+            if (memberData[0] != "") {
+                if (gameData[key].membro_1 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[0] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[0] + '</p>';
+                }
+            }
+            if (memberData[1] != "") {
+                if (gameData[key].membro_2 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[1] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[1] + '</p>';
+                }
+            }
+            if (memberData[2] != "") {
+                if (gameData[key].membro_3 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[2] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[2] + '</p>';
+                }
+            }
+            if (memberData[3] != "") {
+                if (gameData[key].membro_4 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[3] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[3] + '</p>';
+                }
+            }
+            if (memberData[4] != "") {
+                if (gameData[key].membro_5 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[4] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[4] + '</p>';
+                }
+            }
+            if (memberData[5] != "") {
+                if (gameData[key].membro_6 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[5] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[5] + '</p>';
+                }
+            }
+            if (memberData[6] != "") {
+                if (gameData[key].membro_7 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[6] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[6] + '</p>';
+                }
+            }
+            if (memberData[7] != "") {
+                if (gameData[key].membro_8 === "1") {
+                    console; log('====> ' + memberData[7]);
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[7] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[7] + '</p>';
+                }
+            }
+
+            document.getElementById("gameDetail").innerHTML = text;
+            document.getElementById("dtGame").innerHTML = "Jogo:" + gameData[key].gdata;
+            show("gameDIV");
+        }
+    </script>
+</body>
+
+</html>
