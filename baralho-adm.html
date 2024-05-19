@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang='pt-br'>
+
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width,initial-scale=1,shrink-to-fit=no'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <style>
+        :root {
+            --primary-color: #f90a39;
+            --game-color: #0c4719;
+            --text-color: #1d1d1d;
+            --bg-color: #f1f1fb;
+            --fa-style-family-brands: "Font Awesome 6 Brands";
+            --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+        }
+
+        body {
+            background: #ffffff;
+        }
+
+        .container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calendar {
+            width: 100%;
+            max-width: 600px;
+            background: var(--bg-color);
+            padding: 30px 20px;
+            border-radius: 10px;
+        }
+
+        .calendar .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ccc;
+        }
+
+        .calendar .header .month {
+            display: flex;
+            align-items: center;
+            font-size: 25px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .calendar .header .btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar .header .btns .btn {
+            width: 50px;
+            height: 40px;
+            background: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar .header .btns .btn:hover {
+            background: #db0933;
+            transform: scale(1.05);
+        }
+
+        .calendar .weekdays {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .calendar .weekdays .day {
+            width: calc(100% / 7 - 10px);
+            text-align: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .calendar .days {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .calendar .days .day {
+            width: calc(100% / 7 - 10px);
+            height: 50px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-color);
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .calendar .days .day:not(.next):not(.prev):hover {
+            color: #fff;
+            background: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .calendar .days .day.next,
+        .calendar .days .day.prev {
+            color: #ccc;
+        }
+
+        .calendar .days .day.today {
+            color: #fff;
+            background: var(--primary-color);
+        }
+
+        .calendar .days .day.hasgame {
+            color: #fff;
+            background: var(--game-color);
+        }
+
+        .gbutton {
+            background-color: #125e42a2;
+            border: none;
+            color: white;
+            padding: 5px 5px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 2px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        .gbutton:hover {
+            background-color: rgb(25, 55, 121);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="calendarDIV">
+        <div class="calendar">
+            <div class="header">
+                <div class="month">Data</div>
+                <div class="btns">
+                    <div class="btn today" title="Hoje">
+                        <i class="fa fa-calendar-check-o" aria-hidden="true"></i>
+                    </div>
+                    <div class="btn prev" title="Dia anterior">
+                        <i class="fa fa-chevron-left"></i>
+                    </div>
+                    <div class="btn next" title="Próximo dia">
+                        <i class="fa fa-chevron-right"></i>
+                    </div>
+                    <div class="btn games" title="Jogos">
+                        <i class="fa fa-list-ul" aria-hidden="true" onclick='showGames();'></i>
+                    </div>
+                </div>
+            </div>
+            <div class="weekdays">
+                <div class="day">Dom</div>
+                <div class="day">Seg</div>
+                <div class="day">Ter</div>
+                <div class="day">Qua</div>
+                <div class="day">Qui</div>
+                <div class="day">Sex</div>
+                <div class="day">Sab</div>
+            </div>
+            <div class="days">
+                <!-- render days with js -->
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="gameDIV">
+        <div class="calendar">
+            <div class="header">
+                <div class="month" id="gameDay">Jogo</div>
+                <div class="btns">
+                    <div class="btns">
+                        <div class="btn prev" title="Voltar" onclick='show("calendarDIV");'>
+                            <i class="fa fa-chevron-left"></i>
+                        </div>
+                        <div class="btn next" title="Salvar" onclick='saveGame();'>
+                            <i class="fa fa-save"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <label for="msg">Mensagem:</label>
+                <input type="text" id="msg" name="msg" style="width: 200px;">
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="gamesDIV">
+        <div class="calendar">
+            <div class="header">
+                <div class="month" id="games">Jogos Marcados</div>
+                <div class="btns">
+                    <div class="btns">
+                        <div class="btn prev" title="Voltar" onclick='show("calendarDIV");'>
+                            <i class="fa fa-chevron-left"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="gameList">
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="gameDetDIV">
+        <div class="calendar">
+            <div class="header">
+                <div class="month" id="games">Jogo</div>
+                <div class="btns">
+                    <div class="btns">
+                        <div class="btn prev" title="Voltar" onclick='show("calendarDIV");'>
+                            <i class="fa fa-chevron-left"></i>
+                        </div>
+                        <div class="btn del" title="Apagar este jogo" onclick='delGame();'>
+                            <i class="fa fa-window-close" aria-hidden="true"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="gameDetail">
+
+            </div>
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js'
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js'
+        import { getDatabase, ref, onValue, orderByChild, child, push, update } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js'
+
+        const firebaseConfig = {
+            apiKey: "e6f98bd362aa23489c8850741cf08e9f1e641176",
+            authDomain: "Baralho-Jogos",
+            projectId: "baralho-5ad64",
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const refGames = ref(db, 'jogos');
+
+        onValue(refGames, (snapshot) => {
+            snapshot.forEach((childSnapshot) => {
+                const childData = childSnapshot.val();
+                var game = {};
+                game.key = childSnapshot.key;
+                game.gdata = childData.gdata;
+                game.msg = childData.msg;
+                game.membro_1 = childData.membro_1;
+                game.membro_2 = childData.membro_2;
+                game.membro_3 = childData.membro_3;
+                game.membro_4 = childData.membro_4;
+                game.membro_5 = childData.membro_5;
+                game.membro_6 = childData.membro_6;
+                game.membro_7 = childData.membro_7;
+                game.membro_8 = childData.membro_8;
+                gameData.push(game);
+            });
+        }, {
+            onlyOnce: true
+        });
+
+        const refMembers = ref(db, 'membros');
+        onValue(refMembers, (snapshot) => {
+            snapshot.forEach((childSnapshot) => {
+                const childData = childSnapshot.val();
+                var key = childSnapshot.key;
+                memberData.push(childData);
+            });
+        }, {
+            onlyOnce: true
+        });
+
+        export const saveData = () => {
+            const newKey = push(child(ref(db), 'jogos')).key;
+            const msgText = document.getElementById("msg").value;
+            const updates = {};
+            const postData = {
+                gdata: curDate,
+                msg: msgText,
+                membro_1: '0',
+                membro_2: '0',
+                membro_3: '0',
+                membro_4: '0',
+                membro_5: '0',
+                membro_6: '0',
+                membro_7: '0',
+                membro_8: '0',
+            };
+
+            updates['/jogos/' + '/' + newKey] = postData;
+            update(ref(db), updates);
+        };
+        window.saveData = saveData;
+
+        export const delData = () => {
+            const updates = {};
+            updates['/jogos/' + '/' + curGameKey] = null;
+            update(ref(db), updates);
+        };
+        window.delData = delData;          
+    </script>
+    <script>
+        let curDate = '';
+        let curGameKey = '';
+        let gameData = [];
+        const memberData = [];
+        const zeroPad = (num, places) => String(num).padStart(places, '0');
+        const daysContainer = document.querySelector(".days");
+        const nextBtn = document.querySelector(".next");
+        const prevBtn = document.querySelector(".prev");
+        const todayBtn = document.querySelector(".today");
+        const month = document.querySelector(".month");
+        const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",];
+        const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
+        const date = new Date();
+        let currentMonth = date.getMonth();
+        let currentYear = date.getFullYear();
+
+        const renderCalendar = () => {
+            date.setDate(1);
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const lastDayIndex = lastDay.getDay();
+            const lastDayDate = lastDay.getDate();
+            const prevLastDay = new Date(currentYear, currentMonth, 0);
+            const prevLastDayDate = prevLastDay.getDate();
+            const nextDays = 7 - lastDayIndex - 1;
+
+            month.innerHTML = `${months[currentMonth]} ${currentYear}`;
+
+            let days = "";
+
+            for (let x = firstDay.getDay(); x > 0; x--) {
+                days += `<div class="day prev">${prevLastDayDate - x + 1}</div>`;
+            }
+
+            for (let i = 1; i <= lastDayDate; i++) {
+                curDate = zeroPad(i, 2) + "/" + zeroPad(currentMonth + 1, 2) + "/" + currentYear;
+                let hasGame = 0;
+                for (const [key, value] of Object.entries(gameData)) {
+                    if (gameData[key].gdata === curDate) {
+                        hasGame = 1;
+                        break;
+                    }
+                }
+
+                if (
+                    i === new Date().getDate() &&
+                    currentMonth === new Date().getMonth() &&
+                    currentYear === new Date().getFullYear()
+                ) {
+                    if (hasGame) {
+                        days += `<div class="day hasgame">${i}</div>`
+                    } else {
+                        days += `<div class="day today">${i}</div>`
+                    }
+
+                } else {
+                    if (hasGame) {
+                        days += `<div class="day hasgame">${i}</div>`
+                    } else {
+                        days += `<div class="day">${i}</div>`;
+                    }
+                }
+            }
+
+
+            for (let j = 1; j <= nextDays; j++) {
+                days += `<div class="day next">${j}</div>`;
+            }
+
+            daysContainer.innerHTML = days;
+            hideTodayBtn();
+        };
+
+        nextBtn.addEventListener("click", () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+        });
+
+        prevBtn.addEventListener("click", () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+        });
+
+        todayBtn.addEventListener("click", () => {
+            currentMonth = date.getMonth();
+            currentYear = date.getFullYear();
+            renderCalendar();
+        });
+
+        daysContainer.addEventListener("click", (e) => {
+            if (e.target.classList[1] === "prev" || e.target.classList[1] === "next") return;
+
+            let k = 0;
+            curDate = zeroPad(e.target.innerHTML, 2) + "/" + zeroPad(currentMonth + 1, 2) + "/" + currentYear;
+            let hasGame = 0;
+            for (const [key, value] of Object.entries(gameData)) {
+                if (gameData[key].gdata === curDate) {
+                    hasGame = 1;
+                    k = key;
+                    break;
+                }
+            }
+
+            if (hasGame) {
+                showGameDetail(k);
+            } else {
+                showGame(e.target.innerHTML);
+            }
+        });
+
+        function show(targetDiv) {
+            let x = document.getElementById("calendarDIV");
+            x.style.display = "none";
+            x = document.getElementById("gameDIV");
+            x.style.display = "none";
+            x = document.getElementById("gamesDIV");
+            x.style.display = "none";
+            x = document.getElementById("gameDetDIV");
+            x.style.display = "none";
+            x = document.getElementById(targetDiv);
+            x.style.display = "";
+        }
+
+        function showGame(selDay) {
+            curDate = zeroPad(selDay, 2) + "/" + zeroPad(currentMonth + 1, 2) + "/" + currentYear;
+            document.getElementById("gameDay").textContent = "Novo Jogo: " + curDate;
+            show("gameDIV");
+        }
+
+        function showGames() {
+            const gamessContainer = document.querySelector(".days");
+            let text = "";
+
+            const sortgameData = (arr = [], key = '') => {
+                const sortKeys = arr.map(obj => obj[key]);                
+                sortKeys.sort(function (a, b) {
+                    a = a.split('/').reverse().join('');
+                    b = b.split('/').reverse().join('');
+                    return a > b ? 1 : a < b ? -1 : 0;
+                });               
+
+                let result = [];
+                for (let sortKey of sortKeys) {
+                    result.push(arr.find(obj => obj[key] === sortKey))
+                }               
+                return result;
+            }
+            
+            gameData = sortgameData(gameData, 'gdata');
+
+            for (const [key, value] of Object.entries(gameData)) {
+                text += '<p><button type="button" class="gbutton" onclick="showGameDetail(' + key + ');">' + gameData[key].gdata + '</button>' + '  ' + gameData[key].msg + ' </p></br>'
+            }
+            document.getElementById("gameList").innerHTML = text;
+            show("gamesDIV");
+        }
+
+        function showGameDetail(key) {
+            curGameKey = gameData[key].key;
+            let text = '<p>Data:  ' + gameData[key].gdata + '</p>';
+            text += '<p>Mensagem:  ' + gameData[key].msg + '</p>';
+
+            if (memberData[0] != "") {
+                if (gameData[key].membro_1 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[0] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[0] + '</p>';
+                }
+            }
+            if (memberData[1] != "") {
+                if (gameData[key].membro_2 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[1] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[1] + '</p>';
+                }
+            }
+            if (memberData[2] != "") {
+                if (gameData[key].membro_3 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[2] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[2] + '</p>';
+                }
+            }
+            if (memberData[3] != "") {
+                if (gameData[key].membro_4 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[3] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[3] + '</p>';
+                }
+            }
+            if (memberData[4] != "") {
+                if (gameData[key].membro_5 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[4] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[4] + '</p>';
+                }
+            }
+            if (memberData[5] != "") {
+                if (gameData[key].membro_6 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[5] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[5] + '</p>';
+                }
+            }
+            if (memberData[6] != "") {
+                if (gameData[key].membro_7 === "1") {
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[6] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[6] + '</p>';
+                }
+            }
+            if (memberData[7] != "") {
+                if (gameData[key].membro_8 === "1") {
+                    console; log('====> ' + memberData[7]);
+                    text += '<p><i class="fa fa-thumbs-up" style="color:green;" aria-hidden="true"></i>' + memberData[7] + '</p>';
+                } else {
+                    text += '<p><i class="fa fa-thumbs-down" style="color:red;" aria-hidden="true"></i>' + memberData[7] + '</p>';
+                }
+            }
+
+            document.getElementById("gameDetail").innerHTML = text;
+            show("gameDetDIV");
+        }
+
+        function delGame() {
+            var result = confirm("Tem certeza que quer apagar esse jogo?");
+            if (result) {
+                delData();
+                alert("O jogo foi apagado");
+                location.reload();
+            }
+        }
+
+        function saveGame() {
+            saveData();
+            alert('Novo jogo foi salvo.');
+            show("calendarDIV");
+        }
+
+        function hideTodayBtn() {
+            if (
+                currentMonth === new Date().getMonth() &&
+                currentYear === new Date().getFullYear()
+            ) {
+                todayBtn.style.display = "none";
+            } else {
+                todayBtn.style.display = "flex";
+            }
+        }
+
+        var x = document.getElementById("gameDIV");
+        x.style.display = "none";
+        var x = document.getElementById("gamesDIV");
+        x.style.display = "none";
+
+        renderCalendar();            
+    </script>
+</body>
+
+</html>
